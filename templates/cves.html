@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CVE List</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .records-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        select {
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            /* Ensures borders between cells don't overlap */
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            /* Adds a border around the table */
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border-right: 1px solid #ddd;
+            /* Adds a border between columns */
+            border-bottom: 1px solid #ddd;
+            /* Adds a border between rows */
+            text-align: left;
+        }
+
+        th {
+            background-color: #f0f0f0;
+            font-weight: 600;
+        }
+
+        td {
+            border-bottom: 1px solid #ddd;
+            /* Adds a bottom border between rows */
+        }
+
+        tr:hover {
+            background-color: #f9f9f9;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .page-numbers {
+            display: flex;
+            gap: 5px;
+        }
+
+        .page-numbers a {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 4px;
+            text-decoration: none;
+            color: inherit;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .page-numbers a.active {
+            background: #f0f0f0;
+            border-color: #ccc;
+        }
+
+        .page-numbers a:hover:not(.active) {
+            background: #f5f5f5;
+        }
+
+        .page-numbers a.disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>CVE LIST</h1>
+
+    <div class="header-info">
+        <div>Total Records: <span id="total-records">{{ total }}</span></div>
+        <div class="records-selector">
+            <label for="records-per-page">Results per page:</label>
+            <select id="records-per-page" onchange="changeRecordsPerPage()">
+                <option value="10" {% if records_per_page==10 %}selected{% endif %}>10</option>
+                <option value="50" {% if records_per_page==50 %}selected{% endif %}>50</option>
+                <option value="100" {% if records_per_page==100 %}selected{% endif %}>100</option>
+            </select>
+        </div>
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th>CVE ID</th>
+                <th>IDENTIFIER</th>
+                <th>PUBLISHED DATE</th>
+                <th>LAST MODIFIED DATE</th>
+                <th>STATUS</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in results %}
+            <tr onclick="window.location.href='/cves/{{ row['cve_id'] }}'">
+                <td>{{ row['cve_id'] }}</td>
+                <td>{{ row['source_identifier'] }}</td>
+                <td>{{ row['published'] }}</td>
+                <td>{{ row['last_modified'] }}</td>
+                <td>{{ row['vuln_status'] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="pagination">
+        <span id="showing-records">
+            {{ ((page - 1) * records_per_page) + 1 }}-{{page * records_per_page}} of {{ total }} records
+        </span>
+        <div class="page-numbers">
+            <!-- First Page -->
+            {% if page > 1 %}
+            <a href="?page=1&records_per_page={{ records_per_page }}" class="page-link">«</a>
+            {% else %}
+            <a class="page-link disabled">«</a>
+            {% endif %}
+
+            <!-- Previous Page -->
+            {% if page > 1 %}
+            <a href="?page={{ page-1 }}&records_per_page={{ records_per_page }}" class="page-link">‹</a>
+            {% else %}
+            <a class="page-link disabled">‹</a>
+            {% endif %}
+
+            <!-- Page Numbers -->
+            {% for p in range(start_page, end_page + 1) %}
+            <a href="?page={{ p }}&records_per_page={{ records_per_page }}"
+                class="page-link {% if p == page %}active{% endif %}">
+                {{ p }}
+            </a>
+            {% endfor %}
+
+            <!-- Next Page -->
+            {% if page < total_pages %} <a href="?page={{ page+1 }}&records_per_page={{ records_per_page }}"
+                class="page-link">›</a>
+                {% else %}
+                <a class="page-link disabled">›</a>
+                {% endif %}
+
+                <!-- Last Page -->
+                {% if page < total_pages %} <a href="?page={{ total_pages }}&records_per_page={{ records_per_page }}"
+                    class="page-link">»</a>
+                    {% else %}
+                    <a class="page-link disabled">»</a>
+                    {% endif %}
+        </div>
+    </div>
+
+    <script>
+        function changeRecordsPerPage() {
+            const recordsPerPage = document.getElementById('records-per-page').value;
+            window.location.href = `?page=1&records_per_page=${recordsPerPage}`;
+        }
+    </script>
+</body>
+
+</html>
